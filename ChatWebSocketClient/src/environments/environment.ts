@@ -1,4 +1,4 @@
 export const environment = {
-    apiHost: 'localhost:8005',
-    apiEndpoint: 'http://localhost:8005',
+    apiHost: '200.105.253.153:8005',
+    apiEndpoint: 'http://200.105.253.153:8005',
 };

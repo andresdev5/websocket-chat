@@ -1,0 +1,73 @@
+<p-dialog header="Ingresar" [modal]="true" [(visible)]="isLoginModalVisible" [style]="{ width: '25rem' }" (onHide)="closeLoginModal()">
+    <form [formGroup]="loginForm" (submit)="doLogin()">
+        <div class="flex flex-col align-items-center gap-3 mb-3">
+            <label for="username" class="font-semibold w-6rem">Nombre de usuario</label>
+            <input pInputText id="username" class="flex-auto" autocomplete="off" formControlName="username" />
+            @if (loginForm.get('username')?.errors && loginForm.get('username')?.touched) {
+                <div class="text-red-500">
+                    <small *ngIf="loginForm.get('username')?.hasError('required')">El nombre de usuario es requerido</small>
+                </div>
+            }
+        </div>
+        <div class="flex flex-col align-items-center gap-3 mb-5">
+            <label for="password" class="font-semibold w-6rem">Contraseña</label>
+            <p-password id="password1" type="password" class="w-full" [feedback]="false" placeholder="Password"
+                styleClass="p-password p-component p-inputwrapper p-input-icon-right" [style]="{'width':'100%'}"
+                [inputStyle]="{'width':'100%'}" [toggleMask]="true" formControlName="password"></p-password>
+            @if (loginForm.get('password')?.errors && loginForm.get('password')?.touched) {
+                <div class="text-red-500">
+                    <small *ngIf="loginForm.get('password')?.hasError('required')">
+                        La contraseña es requerida
+                    </small>
+                </div>
+            }
+        </div>
+        <div class="flex align-items-end justify-end gap-2">
+            <p-button label="Ingresar" type="submit" />
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog header="Registro" [modal]="true" [(visible)]="isSignupModalVisible" [style]="{ width: '25rem' }" (onHide)="closeSignupModal()">
+    <form [formGroup]="signupForm" (submit)="doSignup()">
+        <div class="flex flex-col align-items-center gap-3 mb-3">
+            <label for="username" class="font-semibold w-6rem">Nombre de usuario</label>
+            <input pInputText id="username" class="flex-auto" formControlName="username" autocomplete="off" />
+            @if (signupForm.get('username')?.errors && signupForm.get('username')?.touched) {
+                <div class="text-red-500">
+                    <small *ngIf="signupForm.get('username')?.hasError('required')">El nombre de usuario es requerido</small>
+                    <small *ngIf="signupForm.get('username')?.hasError('minlength')">El nombre de usuario debe tener al menos 4 caracteres</small>
+                    <small *ngIf="signupForm.get('username')?.hasError('maxlength')">El nombre de usuario debe tener 16 o menos caracteres</small>
+                    <small *ngIf="signupForm.get('username')?.hasError('pattern')">El nombre de usuario solo puede contener letras, números, guiones y puntos</small>
+                </div>
+            }
+        </div>
+        <div class="flex flex-col align-items-center gap-3 mb-5">
+            <label for="password" class="font-semibold w-6rem">Contraseña</label>
+            <p-password id="password" type="password" class="w-full" [feedback]="true" placeholder="Contraseña"
+                styleClass="p-password p-component p-inputwrapper p-input-icon-right" [style]="{'width':'100%'}"
+                [inputStyle]="{'width':'100%'}" [toggleMask]="true" formControlName="password"></p-password>
+            @if (signupForm.get('password')?.errors && signupForm.get('password')?.touched) {
+                <div class="text-red-500">
+                    <small *ngIf="signupForm.get('password')?.hasError('required')">La contraseña es requerida</small>
+                    <small *ngIf="signupForm.get('password')?.hasError('minlength')">La contraseña debe tener al menos 6 caracteres</small>
+                </div>
+            }
+        </div>
+        <div class="flex flex-col align-items-center gap-3 mb-5">
+            <label for="password2" class="font-semibold w-6rem">Confirmar contraseña</label>
+            <p-password id="password2" type="password" class="w-full" [feedback]="false" placeholder="Confirmar contraseña"
+                styleClass="p-password p-component p-inputwrapper p-input-icon-right" [style]="{'width':'100%'}"
+                [inputStyle]="{'width':'100%'}" [toggleMask]="true" formControlName="password2"></p-password>
+            @if (signupForm.get('password2')?.errors && signupForm.get('password2')?.touched) {
+                <div class="text-red-500">
+                    <small *ngIf="signupForm.get('password2')?.hasError('required')">La confirmación de la contraseña es requerida</small>
+                    <small *ngIf="signupForm.get('password2')?.hasError('mismatch')">Las contraseñas no coinciden</small>
+                </div>
+            }
+        </div>
+        <div class="flex align-items-end justify-end gap-2">
+            <p-button label="Registrarse" type="submit" />
+        </div>
+    </form>
+</p-dialog>

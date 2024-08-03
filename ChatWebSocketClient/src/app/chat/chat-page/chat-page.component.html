@@ -1,0 +1,205 @@
+<aside class="flex flex-col h-screen">
+    @if (currentUser) {
+        <section class="flex flex-row items-center gap-3 px-5 bg-black bg-opacity-20 user-section">
+            <div class="w-9 h-9 rounded-full relative">
+                <img class="w-9 h-9 rounded-full"
+                    [src]="currentUser.preferences?.avatar ?? 'https://avatar.iran.liara.run/public/35'" />
+                <span
+                    class="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"
+                    [ngClass]="{
+                        'bg-red-500': currentUser.preferences?.status === 'BUSY',
+                        'bg-yellow-500': currentUser.preferences?.status === 'AWAY',
+                        'bg-green-500': currentUser.preferences?.status === 'ONLINE',
+                        'bg-gray-500': currentUser.preferences?.status === 'OFFLINE'
+                    }"></span>
+            </div>
+            <div class="flex flex-col">
+                <span
+                    [style]="'color: ' + (currentUser.preferences?.color ?? '#ffffff')"
+                    class="text-white capitalize font-semibold">{{ currentUser.username }}</span>
+                <span class="text-white text-opacity-80 text-sm">
+                    {{ {
+                        'ONLINE': 'En linea',
+                        'OFFLINE': 'Desconectado',
+                        'AWAY': 'Ausente',
+                        'BUSY': 'Ocupado'
+                    }[currentUser.preferences?.status ?? 'OFFLINE'] }}
+                </span>
+            </div>
+            <div class="ml-auto">
+                <a class="cursor-pointer" (click)="menu.toggle($event)">
+                    <fa-icon [icon]="'cog'" class="text-white"></fa-icon>
+                </a>
+                <p-tieredMenu #menu  [model]="currentUserMenu" [popup]="true" />
+            </div>
+        </section>
+    }
+
+    <section class="mb-3 border-b-white border-b-1">
+        <!-- tailwind title style -->
+        <h1 class="text-lg font-semibold text-white mx-5">
+            Salas de chat ({{ chatRooms.length }})
+        </h1>
+        <div class="flex flex-col">
+            <div *ngFor="let chatRoom of chatRooms" class="mx-4">
+                <a
+                    class="text-white mb-2 opacity-80 hover:opacity-90
+                             cursor-pointer capitalize font-semibold px-3 py-2 w-full rounded-lg
+                             hover:bg-white hover:bg-opacity-5
+                             transition duration-200 ease-in-out
+                             flex justify-between items-center gap-3 align-items-center
+                             "
+                    [ngClass]="{ 'bg-black bg-opacity-25': chatRoom.id === selectedChatRoom?.id }"
+                    (click)="selectChatRoom(chatRoom)">
+                    <span>
+                        {{ chatRoom.name }}
+                    </span>
+
+                    @if (unreadChannelMessages[chatRoom.id] !== undefined && unreadChannelMessages[chatRoom.id] > 0) {
+                        <span class="text-white text-sm ml-2 bg-red-500 px-1 rounded-full" style="padding: 0.05em 0.55em">
+                            {{ unreadChannelMessages[chatRoom.id] }}
+                        </span>
+                    }
+                </a>
+            </div>
+        </div>
+    </section>
+    <section>
+        <h1 class="text-lg font-semibold text-white mx-5">
+            Usuarios conectados ({{ totalOnlineUsers }})
+        </h1>
+        <div class="flex flex-col">
+            <div *ngFor="let connection of connections">
+                @if (connection.preferences?.status !== 'OFFLINE') {
+                    <div class="mx-4 flex flex-row items-center gap-3">
+                        <div class="w-9 h-9 rounded-full relative">
+                            <img
+                                class="w-9 h-9 rounded-full"
+                                [src]="connection.preferences?.avatar ?? 'https://avatar.iran.liara.run/public/35'"
+                            />
+                            <span
+                                class="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"
+                                [ngClass]="{
+                                    'bg-red-500': connection.preferences?.status === 'BUSY',
+                                    'bg-yellow-500': connection.preferences?.status === 'AWAY',
+                                    'bg-green-500': connection.preferences?.status === 'ONLINE',
+                                    'bg-gray-500': connection.preferences?.status === 'OFFLINE'
+                                }"></span>
+                        </div>
+                        <span class="text-white block my-2 opacity-90 capitalize font-semibold px-3 py-2" [ngStyle]="{
+                            color: connection.preferences?.color ?? '#ffffff'
+                        }">
+                            {{ connection.username }}
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+    @if (!currentUser) {
+        <section class="mt-auto mx-3 mb-3">
+            <div class="w-full auth-buttons mb-4">
+                <p-buttonGroup class="w-full">
+                    <p-button class="login" [size]="'small'" label="Ingresar" icon="pi pi-user" (click)="showLoginModal()" />
+                    <p-button class="signup" [size]="'small'" label="Registrarse" icon="pi pi-user-plus" [severity]="'success'" (click)="showSignupModal()" />
+                </p-buttonGroup>
+            </div>
+        </section>
+    }
+</aside>
+
+<main class="chat-wrapper relative">
+    <div class="header flex justify-between items-center bg-black bg-opacity-25 px-5">
+        <p class="text-white m-0">
+            {{ selectedChatRoom?.description }}
+        </p>
+    </div>
+
+    <div #chatContainer class="chat-messages">
+        <div class="chat-message py-3" *ngFor="let message of receivedMessages" [ngClass]="{
+            'bg-white bg-opacity-5 pt-0': message.unread,
+        }">
+            @if (firstUnredMessage?.id === message.id) {
+                <div class="unread-separator">
+                    <span>Nuevos mensajes</span>
+                </div>
+            }
+
+            @if (message.user.role === 'SYSTEM') {
+                <div class="flex flex-row gap-3 px-5 items-end">
+                    <p class="text-white text-opacity-60 p-0 m-0">
+                        {{ message.message }}
+                    </p>
+                    <p class="text-white text-opacity-30 p-0 m-0 text-sm" style="margin-bottom: -1px">
+                        {{ message.createdAt | date: 'shortTime' }}
+                    </p>
+                </div>
+            } @else {
+                <div class="flex flex-col p-0 message-container">
+                    <div class="flex items-center gap-3 px-5 py-0 message-context">
+                        <span
+                            [ngStyle]="{
+                                color: (message.user.preferences?.color ?? '#ffffff')
+                            }"
+                            class="font-bold p-0 m-0 capitalize">
+                            {{ message.user.username }}
+                        </span>
+                        <p class="flex items-end text-white
+                                    text-opacity-50
+                                    p-0 m-0" style="font-size: 0.7em; margin-bottom: -0.3em;">
+                            {{ message.createdAt | date: 'shortTime' }}
+                        </p>
+                    </div>
+                    <div class="px-5 py-1 mt-1 message-content">
+                        <p class="text-white text-opacity-80 p-0 m-0 content"
+                           [innerHTML]="message.message | emojiParser | safeHtml"></p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (currentUser) {
+        <div class="chat-input flex justify-between items-center bg-black bg-opacity-25 px-5 py-3 mt-auto">
+            <textarea
+                class="w-full bg-transparent text-white text-opacity-80 p-3 border-none max-h-52"
+                pInputTextarea
+                #messageInput
+                rows="1"
+                placeholder="Escribe un mensaje..."
+                [(ngModel)]="message"
+                (keyup.enter)="sendMessage()"
+                [disabled]="!currentUser"
+                [autoResize]="true"
+            ></textarea>
+            <button
+                class="
+                    bg-blue-500 text-white px-3 py-2 rounded-sm font-bold
+                    hover:bg-blue-600 transition duration-200 ease-in-out border-none
+                    cursor-pointer self-end
+                "
+                [ngClass]="{ 'opacity-50': !currentUser }"
+                (click)="sendMessage()"
+                [disabled]="!currentUser"
+            >
+                Enviar
+            </button>
+        </div>
+    } @else {
+        <div class="text-white text-opacity-80 bg-black bg-opacity-20 px-4 py-2 rounded-sm font-bold m-4 flex flex-row gap-5 align-items-center items-center">
+            <fa-icon
+                [icon]="'exclamation-triangle'"
+                class="text-white text-opacity-80 text-3xl"
+            ></fa-icon>
+            <p>Debes <a class="text-white cursor-pointer" (click)="showLoginModal()">iniciar sesión</a> para enviar mensajes</p>
+        </div>
+    }
+</main>
+
+<auth-modal
+    #authModal
+    [doShowLogin]="$showLogin"
+    [doShowSignup]="$showSignup"
+    (onLoggedIn)="onLoggedIn($event)"
+    (onSignedUp)="onSignedUp($event)"
+></auth-modal>

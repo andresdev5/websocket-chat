@@ -1,5 +1,5 @@
 import { Component, computed, HostListener, OnInit, Signal, signal, ViewChild, ViewEncapsulation } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ChatRoomModel, UserModel } from '@app/models';
 import { ChatMessageModel } from '@app/models/chat-message.model';
 import { AuthService } from '@app/services/auth.service';
@@ -22,6 +22,7 @@ import { EmojiParserPipe, MarkdownParserPipe, SafeHtmlPipe } from '@app/shared/p
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { UserPreferences } from '@app/models/UserPreferences.model';
 import { Title } from '@angular/platform-browser';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
     standalone: true,
@@ -44,6 +45,7 @@ import { Title } from '@angular/platform-browser';
         MarkdownParserPipe,
         SafeHtmlPipe,
         InputTextareaModule,
+        InputTextModule,
     ],
     providers: [
         ToastService,
@@ -74,7 +76,13 @@ export class ChatPageComponent implements OnInit {
     isDocumentHidden: boolean = false;
     totalOnlineUsers: number = 0;
     firstUnredMessage: ChatMessageModel | null = null;
+    chatRoomModalIsVisible: boolean = false;
+    chatRoomForm: FormGroup = new FormGroup({
+        name: new FormControl('', [Validators.required]),
+        description: new FormControl('', [Validators.required])
+    });
 
+    private getChatRoomsSubscription: Subscription = new Subscription();
     private stompSubscription: Subscription = new Subscription();
 
 
@@ -94,11 +102,13 @@ export class ChatPageComponent implements OnInit {
             this.loadConnections();
         }, 2000);
 
+        this.loadChatRooms();
+
         this.chatRoomService.getChatRooms().subscribe((chatRooms) => {
             this.chatRooms = chatRooms;
 
             for (const chatRoom of chatRooms) {
-                this.unreadChannelMessages[chatRoom.id] = 0;
+                this.unreadChannelMessages[chatRoom.id!] = 0;
             }
 
             if (chatRooms.length > 0) {
@@ -222,13 +232,13 @@ export class ChatPageComponent implements OnInit {
 
     selectChatRoom(chatRoom: ChatRoomModel): void {
         this.selectedChatRoom = chatRoom;
-        this.subcribeToChatRoom(chatRoom.id);
-        this.chatRoomService.getChatMessages(chatRoom.id).subscribe((messages) => {
+        this.subcribeToChatRoom(chatRoom.id!);
+        this.chatRoomService.getChatMessages(chatRoom.id!).subscribe((messages) => {
             this.receivedMessages = messages;
             this.scrollChatToBottom();
 
-            if (chatRoom.id in this.unreadChannelMessages) {
-                this.unreadChannelMessages[chatRoom.id] = 0;
+            if (chatRoom.id! in this.unreadChannelMessages) {
+                this.unreadChannelMessages[chatRoom.id!] = 0;
             }
         });
     }
@@ -262,6 +272,49 @@ export class ChatPageComponent implements OnInit {
         }
 
         this.toastService.showSuccess('Registro', 'Usuario registrado correctamente');
+    }
+
+    createChatRoom() {
+        if (this.chatRoomForm.invalid) {
+            return;
+        }
+
+        this.chatRoomService.createChatRoom({
+            name: this.chatRoomForm.get('name')?.value,
+            description: this.chatRoomForm.get('description')?.value
+        }).subscribe({
+            next: (chatRoom) => {
+                this.chatRooms.push(chatRoom);
+                this.chatRoomModalIsVisible = false;
+                this.chatRoomForm.reset();
+                this.loadChatRooms().subscribe(() => {
+                    this.selectChatRoom(chatRoom);
+                });
+                this.toastService.showSuccess('Atención', 'Sala de chat creada correctamente');
+            },
+            error: (error) => {
+                this.toastService.showError('Error', 'Error al crear la sala de chat');
+            }
+        });
+    }
+
+    private loadChatRooms(): Observable<ChatRoomModel[]> {
+        this.getChatRoomsSubscription.unsubscribe();
+        const observable = this.chatRoomService.getChatRooms();
+
+        this.getChatRoomsSubscription = observable.subscribe((chatRooms) => {
+            this.chatRooms = chatRooms;
+
+            for (const chatRoom of chatRooms) {
+                this.unreadChannelMessages[chatRoom.id!] = 0;
+            }
+
+            if (chatRooms.length > 0) {
+                this.selectChatRoom(chatRooms[0]);
+            }
+        });
+
+        return observable;
     }
 
     private subcribeToChatRoom(chatRoomId: number): void {
@@ -327,7 +380,7 @@ export class ChatPageComponent implements OnInit {
 
             setTimeout(() => {
                 if (this.selectedChatRoom) {
-                    this.unreadChannelMessages[this.selectedChatRoom.id] = 0;
+                    this.unreadChannelMessages[this.selectedChatRoom.id!] = 0;
                 }
 
                 this.titleService.setTitle('Chat');

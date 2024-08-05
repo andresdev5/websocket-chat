@@ -1,6 +1,6 @@
 export interface ChatRoomModel {
-    id: number;
+    id?: number;
     name: string;
     description: string;
-    createdAt: Date;
+    createdAt?: Date;
 }

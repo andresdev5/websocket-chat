@@ -18,4 +18,8 @@ export class ChatRoomService {
     getChatMessages(chatRoomId: number): Observable<ChatMessageModel[]> {
         return this.httpClient.get<ChatMessageModel[]>(`${environment.apiEndpoint}/api/chat-rooms/${chatRoomId}/messages`);
     }
+
+    createChatRoom(chatRoom: ChatRoomModel): Observable<ChatRoomModel> {
+        return this.httpClient.post<ChatRoomModel>(`${environment.apiEndpoint}/api/chat-rooms`, chatRoom);
+    }
 }

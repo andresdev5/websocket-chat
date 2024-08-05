@@ -25,6 +25,6 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
     @Override
     public ChatRoom createChatRoom(ChatRoom chatRoom) {
-        return null;
+        return chatRoomRepository.save(chatRoom);
     }
 }

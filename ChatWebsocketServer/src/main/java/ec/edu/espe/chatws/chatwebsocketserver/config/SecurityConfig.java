@@ -5,6 +5,7 @@ import ec.edu.espe.chatws.chatwebsocketserver.jwt.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,6 +23,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -35,10 +38,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(antMatcher(HttpMethod.POST, "/api/chat-rooms")).hasRole("ADMIN")
                         .requestMatchers(
                                 "/index.html",
                                 "/ws/**",
-                                "/api/**",
+                                "/api/auth/**",
+                                "/api/chat-rooms/**",
+                                "/api/information/**",
+                                "/api/user/**",
                                 "/queue/reply/**",
                                 "/topic/event"
                         ).permitAll()

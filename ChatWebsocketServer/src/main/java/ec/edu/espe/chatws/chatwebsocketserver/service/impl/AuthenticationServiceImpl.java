@@ -11,10 +11,14 @@ import ec.edu.espe.chatws.chatwebsocketserver.service.AuthenticationService;
 import ec.edu.espe.chatws.chatwebsocketserver.utils.ColorUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -43,6 +47,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .status(UserStatus.ONLINE)
                 .avatar(avatar)
                 .build();
+
+        Optional<User> existingUser = userRepository.findByUsername(input.getUsername());
+
+        if (existingUser.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, "User already exists");
+        }
 
         UserPreference savedPreferences = userPreferenceRepository.save(preferences);
 

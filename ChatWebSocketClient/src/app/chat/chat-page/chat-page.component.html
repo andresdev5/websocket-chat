@@ -44,14 +44,16 @@
                         (click)="chatRoomModalIsVisible = true"></fa-icon>
             }
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col overflow-y-auto" style="max-height: 250px;">
             <div *ngFor="let chatRoom of chatRooms" class="mx-4">
                 <a
                     class="text-white mb-2 opacity-80 hover:opacity-90
                              cursor-pointer capitalize font-semibold px-3 py-2 w-full rounded-lg
                              hover:bg-white hover:bg-opacity-5
                              transition duration-200 ease-in-out
-                             flex justify-between items-center gap-3 align-items-center
+                             justify-between items-center gap-3 align-items-center
+                             block text-nowrap overflow-hidden whitespace-nowrap
+                             max-w-100
                              "
                     [ngClass]="{ 'bg-black bg-opacity-25': chatRoom.id === selectedChatRoom?.id }"
                     (click)="selectChatRoom(chatRoom)">
@@ -72,6 +74,8 @@
         <h1 class="text-lg font-semibold text-white mx-5">
             Usuarios conectados ({{ totalOnlineUsers }})
         </h1>
+    </section>
+    <section class="overflow-y-auto" style="max-height: 100%;">
         <div class="flex flex-col">
             <div *ngFor="let connection of connections">
                 @if (connection.preferences?.status !== 'OFFLINE') {
@@ -170,6 +174,7 @@
                 pInputTextarea
                 #messageInput
                 rows="1"
+                maxlength="1000"
                 placeholder="Escribe un mensaje..."
                 [(ngModel)]="message"
                 (keyup.enter)="sendMessage()"
@@ -228,7 +233,7 @@
             </div>
             <div class="flex flex-col align-items-center gap-3 mb-3">
                 <label for="description" class="font-semibold w-6rem">Descripción:</label>
-                <textarea pInputTextarea id="description" autocomplete="off" formControlName="description"></textarea>
+                <textarea pInputTextarea maxLength="200" id="description" autocomplete="off" formControlName="description"></textarea>
                 @if (chatRoomForm.get('description')?.errors && chatRoomForm.get('description')?.touched) {
                     <div class="text-red-500">
                         <small *ngIf="chatRoomForm.get('description')?.hasError('required')">La descripción es requerida</small>

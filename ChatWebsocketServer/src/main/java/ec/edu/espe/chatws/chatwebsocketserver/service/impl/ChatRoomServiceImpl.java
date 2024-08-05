@@ -22,4 +22,9 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     public List<ChatRoom> findAll() {
         return chatRoomRepository.findAll();
     }
+
+    @Override
+    public ChatRoom createChatRoom(ChatRoom chatRoom) {
+        return null;
+    }
 }

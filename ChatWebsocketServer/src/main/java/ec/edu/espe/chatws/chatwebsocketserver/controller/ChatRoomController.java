@@ -5,10 +5,7 @@ import ec.edu.espe.chatws.chatwebsocketserver.entity.ChatRoom;
 import ec.edu.espe.chatws.chatwebsocketserver.service.ChatMessageService;
 import ec.edu.espe.chatws.chatwebsocketserver.service.ChatRoomService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,6 +21,11 @@ public class ChatRoomController {
     @GetMapping
     public List<ChatRoom> getChatRooms() {
         return chatRoomService.findAll();
+    }
+
+    @PostMapping
+    public ChatRoom createChatRoom(@RequestBody ChatRoom chatRoom) {
+        return chatRoomService.createChatRoom(chatRoom);
     }
 
     @GetMapping("/{roomId}/messages")

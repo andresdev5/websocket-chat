@@ -7,4 +7,5 @@ import java.util.List;
 public interface ChatRoomService {
     ChatRoom findById(long roomId);
     List<ChatRoom> findAll();
+    ChatRoom createChatRoom(ChatRoom chatRoom);
 }

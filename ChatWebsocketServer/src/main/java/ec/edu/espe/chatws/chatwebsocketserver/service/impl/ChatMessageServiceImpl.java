@@ -33,7 +33,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
     @Override
     public List<ChatMessage> findByRoomId(long roomId) {
-        List<ChatMessage> messages = chatMessageRepository.findByChatRoomId(roomId);
+        List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderByIdAsc(roomId);
         Parser parser = Parser.builder().build();
 
         for (ChatMessage message : messages) {

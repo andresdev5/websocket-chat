@@ -1,12 +1,15 @@
 package ec.edu.espe.chatws.chatwebsocketserver.service.impl;
 
+import ec.edu.espe.chatws.chatwebsocketserver.dto.UserDto;
 import ec.edu.espe.chatws.chatwebsocketserver.entity.User;
 import ec.edu.espe.chatws.chatwebsocketserver.entity.UserPreference;
 import ec.edu.espe.chatws.chatwebsocketserver.presenter.PreferencesRequestPresenter;
 import ec.edu.espe.chatws.chatwebsocketserver.repository.UserPreferenceRepository;
 import ec.edu.espe.chatws.chatwebsocketserver.repository.UserRepository;
 import ec.edu.espe.chatws.chatwebsocketserver.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,30 +23,40 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserPreferenceRepository userPreferenceRepository;
+    @Autowired
+    private ModelMapper modelMapper;
 
-    public User create(User user) {
-        return userRepository.save(user);
+    public UserDto create(User user) {
+        return modelMapper.map(userRepository.save(user), UserDto.class);
     }
 
-    public User update(User user) {
+    public UserDto update(User user) {
         if (user.getId() == null) {
             throw new IllegalArgumentException("User id is required");
         }
 
-        return userRepository.save(user);
+        return modelMapper.map(userRepository.save(user), UserDto.class);
     }
 
     public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        return Optional.of(user);
     }
 
-    public Optional<User> findByUsernameAndPassword(String username, String password) {
-        return userRepository.findByUsernameAndPassword(username, password);
+    public Optional<UserDto> findByUsernameAndPassword(String username, String password) {
+        return Optional.of(modelMapper.map(userRepository.findByUsernameAndPassword(username, password)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado")), UserDto.class));
     }
 
     @Override
-    public List<User> findByUsernames(List<String> username) {
-        return userRepository.findByUsernameIn(username);
+    public List<UserDto> findByUsernames(List<String> username) {
+        return userRepository.findByUsernameIn(username)
+                .stream()
+                .map(user -> userRepository.findById(user.getId()).get())
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .toList();
     }
 
     @Override

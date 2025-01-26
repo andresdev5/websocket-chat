@@ -1,7 +1,9 @@
 package ec.edu.espe.chatws.chatwebsocketserver.controller;
 
+import ec.edu.espe.chatws.chatwebsocketserver.dto.UserDto;
 import ec.edu.espe.chatws.chatwebsocketserver.entity.User;
 import ec.edu.espe.chatws.chatwebsocketserver.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
@@ -21,14 +23,20 @@ public class InformationController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @GetMapping("/connections")
-    public List<User> getConnections() {
+    public List<UserDto> getConnections() {
         List<String> connections = new ArrayList<>();
 
         simpUserRegistry.getUsers().forEach(user -> {
             connections.add(user.getName());
         });
 
-        return userService.findByUsernames(connections);
+        return userService.findByUsernames(connections)
+                .stream()
+                .map(user -> modelMapper.map(user, UserDto.class))
+                .toList();
     }
 }

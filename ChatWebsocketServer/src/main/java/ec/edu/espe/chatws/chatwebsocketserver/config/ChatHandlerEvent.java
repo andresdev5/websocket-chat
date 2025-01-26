@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.security.Principal;
 import java.util.Map;
 
 @Component
@@ -29,7 +30,18 @@ public class ChatHandlerEvent {
 
     @EventListener
     public void handleSessionDisconnect(SessionDisconnectEvent event) {
-        String username = event.getUser().getName();
+        Principal user = event.getUser();
+
+        if (user == null) {
+            messagingTemplate.convertAndSend("/topic/event", ChatEventPresenter.builder()
+                    .event("TOKEN_EXPIRED")
+                    .message("")
+                    .data(Map.of())
+                    .build());
+            return;
+        }
+
+        String username = user.getName();
         messagingTemplate.convertAndSend("/topic/event", ChatEventPresenter.builder()
                 .event("DISCONNECTED")
                 .message(username + " se ha conectado.")

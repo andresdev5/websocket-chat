@@ -1,11 +1,9 @@
 package ec.edu.espe.chatws.chatwebsocketserver.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
@@ -25,6 +23,15 @@ public class ChatRoom {
 
     @NotBlank
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private ChatRoomType type = ChatRoomType.CHANNEL;
+
+    @OneToOne
+    @JoinColumn(name = "owner_id")
+    @ToString.Exclude
+    private User owner;
 
     @Builder.Default
     private Date createdAt = new Date();

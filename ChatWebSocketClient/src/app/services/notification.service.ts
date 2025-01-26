@@ -15,7 +15,11 @@ export class NotificationService {
     }
 
     setDocumentVisibility(visibilityState: DocumentVisibilityState) {
-        this.enabledNotifications = visibilityState === 'hidden';
+        this.setNotificationsAvailable(visibilityState === 'hidden');
+    }
+
+    setNotificationsAvailable(available: boolean) {
+        this.enabledNotifications = available;
     }
 
     sendSoundNotification() {

@@ -77,9 +77,20 @@
     </section>
     <section class="overflow-y-auto" style="max-height: 100%;">
         <div class="flex flex-col">
-            <div *ngFor="let connection of connections">
+            <div *ngFor="let connection of connections" class="mx-4">
                 @if (connection.preferences?.status !== 'OFFLINE') {
-                    <div class="mx-4 flex flex-row items-center gap-3">
+                    <a
+                        (click)="selectUserChatRoom(connection)"
+                        [ngClass]="{
+                            'cursor-pointer hover:bg-white hover:bg-opacity-5': currentUser?.id !== connection.id,
+                        }"
+                        class="
+                            flex flex-row
+                            mb-2 opacity-80 hover:opacity-90
+                            capitalize font-semibold px-3 py-2 w-full rounded-lg
+                            transition duration-200 ease-in-out
+                            items-center gap-3 align-items-center
+                        ">
                         <div class="w-9 h-9 rounded-full relative">
                             <img
                                 class="w-9 h-9 rounded-full"
@@ -99,7 +110,12 @@
                         }">
                             {{ connection.username }}
                         </span>
-                    </div>
+                        @if (currentUser?.id !== connection.id && connection.chatRoom && unreadChannelMessages[connection.chatRoom!.id!] !== undefined && unreadChannelMessages[connection.chatRoom.id!] > 0) {
+                            <span class="text-white text-sm ml-2 bg-red-500 px-1 rounded-full" style="padding: 0.05em 0.55em">
+                                {{ unreadChannelMessages[connection.chatRoom.id!] }}
+                            </span>
+                        }
+                    </a>
                 }
             </div>
         </div>
@@ -178,7 +194,7 @@
                 placeholder="Escribe un mensaje..."
                 [(ngModel)]="message"
                 (keyup.enter)="sendMessage()"
-                [disabled]="!currentUser"
+                [disabled]="!currentUser || !selectedChatRoom"
                 [autoResize]="true"
             ></textarea>
             <button
@@ -187,9 +203,9 @@
                     hover:bg-blue-600 transition duration-200 ease-in-out border-none
                     cursor-pointer self-end
                 "
-                [ngClass]="{ 'opacity-50': !currentUser }"
+                [ngClass]="{ 'opacity-50': !currentUser || !selectedChatRoom }"
                 (click)="sendMessage()"
-                [disabled]="!currentUser"
+                [disabled]="!currentUser || !selectedChatRoom"
             >
                 Enviar
             </button>

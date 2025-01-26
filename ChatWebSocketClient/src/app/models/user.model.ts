@@ -1,5 +1,6 @@
 import { UserRole, UserStatus } from '@app/shared/enums';
 import { UserPreferences } from './UserPreferences.model';
+import { ChatRoomModel } from '@app/models/chat-room.model';
 
 export interface UserModel {
     id: number;
@@ -10,5 +11,8 @@ export interface UserModel {
     credentialsNonExpired?: boolean;
     enabled?: boolean;
     authorities?: string[];
-    preferences?: UserPreferences
+    preferences?: UserPreferences;
+    chatRoom?: {
+        id: number;
+    }
 }

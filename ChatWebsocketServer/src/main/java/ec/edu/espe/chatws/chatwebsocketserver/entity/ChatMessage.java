@@ -36,5 +36,8 @@ public class ChatMessage {
     private User user;
 
     @ManyToOne
+    private User receiver;
+
+    @ManyToOne
     private ChatRoom chatRoom;
 }

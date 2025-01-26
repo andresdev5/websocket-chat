@@ -1,9 +1,11 @@
 package ec.edu.espe.chatws.chatwebsocketserver.controller;
 
+import ec.edu.espe.chatws.chatwebsocketserver.dto.UserPreferenceDto;
 import ec.edu.espe.chatws.chatwebsocketserver.entity.UserPreference;
 import ec.edu.espe.chatws.chatwebsocketserver.presenter.ChatEventPresenter;
 import ec.edu.espe.chatws.chatwebsocketserver.presenter.PreferencesRequestPresenter;
 import ec.edu.espe.chatws.chatwebsocketserver.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
@@ -20,8 +22,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @PutMapping("/preferences")
-    public UserPreference updatePreferences(@RequestBody PreferencesRequestPresenter preferencesRequestPresenter) {
+    public UserPreferenceDto updatePreferences(@RequestBody PreferencesRequestPresenter preferencesRequestPresenter) {
         UserPreference preferences = userService.updateUserPreferences(preferencesRequestPresenter);
         simpMessagingTemplate.convertAndSend("/topic/event", ChatEventPresenter.builder()
                 .event("UPDATE_USER_PREFERENCES")
@@ -32,6 +37,6 @@ public class UserController {
                 ))
                 .build());
 
-        return preferences;
+        return modelMapper.map(preferences, UserPreferenceDto.class);
     }
 }

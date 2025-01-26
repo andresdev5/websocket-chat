@@ -7,8 +7,7 @@
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
         http://www.liquibase.org/xml/ns/dbchangelog-ext https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
         http://www.liquibase.org/xml/ns/pro https://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
-    <changeSet id="cs-1" author="Andrés Jácome">
-
+    <changeSet id="cs-1" author="Espe">
         <createTable tableName="user_preferences">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
@@ -55,11 +54,17 @@
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="owner_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="description" type="TEXT">
                 <constraints nullable="true"/>
+            </column>
+            <column name="type" type="VARCHAR(45)" defaultValue="CHANNEL">
+                <constraints nullable="false"/>
             </column>
             <column name="created_at" type="TIMESTAMP">
                 <constraints nullable="false"/>
@@ -75,6 +80,9 @@
             </column>
             <column name="user_id" type="BIGINT">
                 <constraints nullable="false"/>
+            </column>
+            <column name="receiver_id" type="BIGINT">
+                <constraints nullable="true"/>
             </column>
             <column name="message" type="TEXT">
                 <constraints nullable="false"/>

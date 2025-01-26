@@ -23,6 +23,7 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { UserPreferences } from '@app/models/UserPreferences.model';
 import { Title } from '@angular/platform-browser';
 import { InputTextModule } from 'primeng/inputtext';
+import { ChatRoomType } from '@app/shared/enums/chat-room-type.enum';
 
 @Component({
     standalone: true,
@@ -102,9 +103,15 @@ export class ChatPageComponent implements OnInit {
             this.loadConnections();
         }, 2000);
 
+        setInterval(() => {
+            this.checkDocumentFocus();
+        }, 300);
+
         this.loadChatRooms();
 
-        this.chatRoomService.getChatRooms().subscribe((chatRooms) => {
+        this.chatRoomService.getChatRooms({
+            type: ChatRoomType.CHANNEL
+        }).subscribe((chatRooms) => {
             this.chatRooms = chatRooms;
 
             for (const chatRoom of chatRooms) {
@@ -116,9 +123,22 @@ export class ChatPageComponent implements OnInit {
             }
         });
 
+        this.rxStompService.watch('/queue/errors').subscribe((message) => {
+            if (message.isBinaryBody) {
+                const parsed = JSON.parse(new TextDecoder().decode(message.binaryBody));
+                console.log('/queue/errors', parsed);
+            }
+        });
+
         this.rxStompService.watch('/topic/event').subscribe((message) => {
             console.log('/topic/event', message);
             const chatEvent = JSON.parse(message.body);
+
+            console.log('chatEvent', chatEvent);
+
+            if (chatEvent && chatEvent.event === 'TOKEN_EXPIRED') {
+                this.authService.logout();
+            }
 
             if (chatEvent && ['CONNECTED', 'DISCONNECTED'].includes(chatEvent.event)) {
                 this.loadConnections();
@@ -143,6 +163,8 @@ export class ChatPageComponent implements OnInit {
             if (chatEvent && chatEvent.event === 'MESSAGE') {
                 const roomId = parseInt(chatEvent.data['roomId']);
                 const senderId = parseInt(chatEvent.data['senderId']);
+
+                console.log('received message', chatEvent.data);
 
                 if (this.currentUser?.id && this.selectedChatRoom?.id
                     && roomId && senderId
@@ -221,16 +243,27 @@ export class ChatPageComponent implements OnInit {
             return;
         }
 
+        console.log('sending message in chat room', this.selectedChatRoom?.id);
+
         this.rxStompService.publish({
             destination: '/app/message/' + this.selectedChatRoom!.id,
-            body: JSON.stringify({ message: this.message })
+            body: JSON.stringify({
+                message: this.message,
+                receiver: this.selectedChatRoom!.owner ? {
+                    id: this.selectedChatRoom!.owner.id
+                } : null
+            })
         })
 
         this.message = '';
         this.scrollChatToBottom();
     }
 
-    selectChatRoom(chatRoom: ChatRoomModel): void {
+    selectChatRoom(chatRoom?: ChatRoomModel): void {
+        if (!chatRoom || this.currentUser?.id === chatRoom.owner?.id) {
+            return;
+        }
+
         this.selectedChatRoom = chatRoom;
         this.subcribeToChatRoom(chatRoom.id!);
         this.chatRoomService.getChatMessages(chatRoom.id!).subscribe((messages) => {
@@ -240,6 +273,21 @@ export class ChatPageComponent implements OnInit {
             if (chatRoom.id! in this.unreadChannelMessages) {
                 this.unreadChannelMessages[chatRoom.id!] = 0;
             }
+        });
+    }
+
+    selectUserChatRoom(owner?: UserModel): void {
+        if (!owner) {
+            return;
+        }
+
+        if (owner.id === this.currentUser?.id) {
+            return
+        }
+
+        this.chatRoomService.getUserChatRoom(owner.id).subscribe((chatRoom) => {
+            this.selectChatRoom(chatRoom);
+            this.selectedChatRoom!.owner = owner;
         });
     }
 
@@ -291,6 +339,7 @@ export class ChatPageComponent implements OnInit {
                     this.selectChatRoom(chatRoom);
                 });
                 this.toastService.showSuccess('Atención', 'Sala de chat creada correctamente');
+                this.loadChatRooms();
             },
             error: (error) => {
                 this.toastService.showError('Error', 'Error al crear la sala de chat');
@@ -341,8 +390,11 @@ export class ChatPageComponent implements OnInit {
                 return 0;
             });
 
-            for (let i = 0; i < 30; i++)
-                this.connections = [...this.connections, ...connections];
+            for (const connection of this.connections) {
+                if (connection.chatRoom) {
+                    this.unreadChannelMessages[connection.chatRoom.id!] = 0;
+                }
+            }
         });
     }
 
@@ -371,6 +423,11 @@ export class ChatPageComponent implements OnInit {
 
     private updateTotalOnlineUsers(): void {
         this.totalOnlineUsers = this.connections.filter((c) => c.preferences?.status === UserStatus.ONLINE).length;
+    }
+
+    checkDocumentFocus(): void {
+        const hasFocus = document.hasFocus();
+        this.notificationService.setNotificationsAvailable(!hasFocus);
     }
 
     @HostListener('document:visibilitychange', ['$event'])

@@ -1,5 +1,9 @@
 package ec.edu.espe.chatws.chatwebsocketserver.controller;
 
+import ec.edu.espe.chatws.chatwebsocketserver.dto.ChatRoomDto;
+import ec.edu.espe.chatws.chatwebsocketserver.dto.UserChatRoomDto;
+import ec.edu.espe.chatws.chatwebsocketserver.dto.UserDto;
+import ec.edu.espe.chatws.chatwebsocketserver.dto.UserPreferenceDto;
 import ec.edu.espe.chatws.chatwebsocketserver.entity.User;
 import ec.edu.espe.chatws.chatwebsocketserver.presenter.AuthUserPresenter;
 import ec.edu.espe.chatws.chatwebsocketserver.presenter.LoginResponsePresenter;
@@ -7,6 +11,7 @@ import ec.edu.espe.chatws.chatwebsocketserver.service.AuthenticationService;
 import ec.edu.espe.chatws.chatwebsocketserver.jwt.JwtTokenUtil;
 import ec.edu.espe.chatws.chatwebsocketserver.service.UserService;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +24,11 @@ public class AuthController {
     private final JwtTokenUtil jwtTokenUtil;
     private final AuthenticationService authenticationService;
     private final UserService userService;
+    private final ModelMapper modelMapper;
 
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody AuthUserPresenter credentials) {
-        User registeredUser = authenticationService.signup(credentials);
+    public ResponseEntity<UserDto> register(@RequestBody AuthUserPresenter credentials) {
+        UserDto registeredUser = authenticationService.signup(credentials);
         return ResponseEntity.ok(registeredUser);
     }
 
@@ -39,8 +45,16 @@ public class AuthController {
     }
 
     @GetMapping("/user/{username}")
-    public ResponseEntity<User> me(@PathVariable String username) {
+    public ResponseEntity<UserDto> me(@PathVariable String username) {
         Optional<User> user = userService.findByUsername(username);
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+
+        if (user.isPresent()) {
+            User source = user.get();
+            UserDto dto = modelMapper.map(source, UserDto.class);
+
+            return ResponseEntity.ok(dto);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

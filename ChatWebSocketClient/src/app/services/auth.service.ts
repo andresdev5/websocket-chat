@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { UserModel } from '@app/models';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '@env/environment';
-import { map, Observable, of, tap } from 'rxjs';
+import { catchError, map, Observable, of, tap } from 'rxjs';
 import { LoginResponseModel } from '@app/models/login-response.model';
 
 @Injectable({
@@ -36,7 +36,23 @@ export class AuthService {
         try {
             const decoded = jwtDecode(token);
             const username = decoded['sub'];
-            return this.httpClient.get<UserModel>(`${environment.apiEndpoint}/api/auth/user/${username}`);
+
+            try {
+                const response = this.httpClient
+                    .get<any>(`${environment.apiEndpoint}/api/auth/user/${username}`)
+                    .pipe(catchError((error) => {
+                        if (error.status === 401) {
+                            this.logout();
+                        }
+
+                        return error;
+                    }));
+
+                return response;
+            } catch (error) {
+                console.error('!!!!!', error);
+                return of(null);
+            }
         } catch (error) {
             console.error(error);
             return of(null);
